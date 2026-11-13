@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
 
 // ANSI Color Codes for enhanced terminal output (same as Assignment 1)
@@ -130,9 +131,8 @@ class ReadyQueue {
     private final Map<Thread, Process> map = new HashMap<>();     // thread -> process (same idea as Assignment 1)
 
     private final ReentrantLock queueLock = new ReentrantLock();
-    // TODO Feature 3: declare the counting semaphore that counts the processes waiting in the ready queue here
+    private final Semaphore readyCount = new Semaphore(0);   // القيمة = عدد العمليات في الطابور، يبدأ 0 لأن الطابور فارغ
 
-    // Add a process to the ready queue (new process, or a process that did not finish its quantum)
        // Add a process to the ready queue (new process, or a process that did not finish its quantum)
     public void add(Process process) {
         Thread thread = new Thread(process);
@@ -144,8 +144,7 @@ class ReadyQueue {
             queueLock.unlock();
         }
 
-        // TODO Feature 3: signal that one more process is available in the queue
-
+        readyCount.release();
         System.out.println(Colors.BLUE + "  ➕ " + Colors.BOLD + Colors.CYAN + process.getName() + Colors.RESET +
                 Colors.BLUE + " (Priority: " + process.getPriority() + ") added to ready queue" + Colors.RESET +
                 " │ Remaining: " + Colors.YELLOW + process.getRemainingTime() + "ms" + Colors.RESET +
@@ -193,6 +192,13 @@ class ReadyQueue {
         queueLock.unlock();                      
     }
 
+}
+    public void waitForProcess() throws InterruptedException {
+    readyCount.acquire();
+}
+
+public void wakeAll(int n) {
+    readyCount.release(n);
 }
 }
 // Class representing a process (same as Assignment 1) - executes ONE time quantum per thread start
@@ -295,47 +301,47 @@ class CpuWorker extends Thread {
         this.readyQueue = readyQueue;
     }
 
-    @Override
-    public void run() {
-        while (SharedStats.getCompletedProcessCount() < SharedStats.totalProcesses) {
+   @Override
+public void run() {
+    while (true) {
+        // Feature 3: sleep (blocked, not spinning) until a process is available
+        try {
+            readyQueue.waitForProcess();
+        } catch (InterruptedException e) {
+            return;
+        }
 
-            // TODO Feature 3: replace this polling loop by a blocking wait on the counting semaphore
-            Thread thread = readyQueue.poll();
-            if (thread == null) {
-                // ⚠️ BUSY WAITING: the CPU keeps checking an empty queue instead of sleeping until
-                // a process is available. It wastes CPU time and needs the "completed == total" test above to stop.
-                SharedStats.busyWaitPolls.incrementAndGet();      // (counted for the verification block)
-                try {
-                    Thread.sleep(20);
-                } catch (InterruptedException e) {
-                    return;
-                }
-                continue;
-            }
+        // Woken by the shutdown signal: all processes are finished
+        if (SharedStats.getCompletedProcessCount() >= SharedStats.totalProcesses) {
+            break;
+        }
 
-            Process process = readyQueue.processOf(thread);
-            System.out.println(Colors.MAGENTA + "  ┌─ [CPU-" + cpuId + "] picks " + Colors.BRIGHT_CYAN +
-                    process.getName() + Colors.MAGENTA + " │ Ready queue: [" + Colors.BRIGHT_WHITE +
-                    readyQueue.snapshot() + Colors.MAGENTA + "]" + Colors.RESET);
+        Thread thread = readyQueue.poll();       // guaranteed not null here
+        Process process = readyQueue.processOf(thread);
+        System.out.println(Colors.MAGENTA + "  ┌─ [CPU-" + cpuId + "] picks " + Colors.BRIGHT_CYAN +
+                process.getName() + Colors.MAGENTA + " │ Ready queue: [" + Colors.BRIGHT_WHITE +
+                readyQueue.snapshot() + Colors.MAGENTA + "]" + Colors.RESET);
 
-            process.setCpuId(cpuId);
-            thread.start();                      // run one quantum
-            try {
-                thread.join();                   // wait for the end of the quantum
-            } catch (InterruptedException e) {
-                System.out.println("CPU-" + cpuId + " interrupted.");
-            }
+        process.setCpuId(cpuId);
+        thread.start();                          // run one quantum
+        try {
+            thread.join();                       // wait for the end of the quantum
+        } catch (InterruptedException e) {
+            System.out.println("CPU-" + cpuId + " interrupted.");
+        }
 
-            if (!process.isFinished()) {
-                readyQueue.add(process);         // not finished: back to the ready queue
-            }
+        if (!process.isFinished()) {
+            readyQueue.add(process);             // not finished: back to the ready queue
+        }
 
-            // TODO Feature 3: when the LAST process has completed, wake up the CPUs that are blocked on the
-            // semaphore so that they can terminate (otherwise they would wait forever!)
+        // Feature 3: last process completed -> wake the other CPUs so they can stop
+        if (SharedStats.getCompletedProcessCount() >= SharedStats.totalProcesses) {
+            readyQueue.wakeAll(SharedStats.totalCPUs);
+            break;
+        }
+        }
         }
     }
-}
-
 public class SchedulerSimulationSync {
     public static void main(String[] args) {
         // ⚠️ IMPORTANT: Put your student ID here to seed the random number generator
