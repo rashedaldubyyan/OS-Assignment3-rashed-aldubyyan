@@ -32,11 +32,11 @@
 
 | Field | Your Answer |
 |-------|-------------|
-| **Full Name** | [Write your full name here] |
-| **Student ID** | [Write your student ID here] |
-| **University Email** | [yourid]@std.psau.edu.sa |
-| **GitHub Username** | [your-github-username] |
-| **Repository Link** | [Paste your repository link here] |
+| **Full Name** | [rashed aldubyyan]
+| **Student ID** | [445050049]
+| **University Email** | 445050049@std.psau.edu.sa
+| **GitHub Username** | [rashedaldubyyan]
+| **Repository Link** | [[Paste your repository link here](https://github.com/rashedaldubyyan/OS-Assignment3-rashed-aldubyyan)] |
  
 ---
 
@@ -132,69 +132,88 @@
 
 ## Your Development Log
 
-### Entry 1 - [Date and Time]
-**What I did**:
+### Entry 1 -[November 12, 2026, 3:30 PM]
+**What I did**:Set my student ID and ran the original starter.
 
-**Details**:
+**Details**:- Changed the student ID to 445050049 in SchedulerSimulationSync.java
+- Ran the starter: 14 processes, time quantum 3000ms, 4 CPUs
+- All 4 CPUs crashed with a NullPointerException in ReadyQueue.snapshot()
+- The verification block showed observed = 0 for all values
+- Saved the output for Question 1 of Part C
+**Challenges**:I did not understand why all the CPUs crashed before running any process.
 
-**Challenges**:
+**Solution**: I found that snapshot() loops over the list while another CPU removes
+elements with poll(). The list changes during the loop, so it crashes.
 
-**Solution**:
-
-**Time spent**:
-
----
-
-### Entry 2 - [Date and Time]
-**What I did**:
-
-**Details**:
-
-**Challenges**:
-
-**Solution**:
-
-**Time spent**:
+**Time spent**:40 minutes
 
 ---
 
-### Entry 3 - [Date and Time]
-**What I did**:
+### Entry 2 - [November 12, 2026, 4:00 PM - 7:00 PM]
+**What I did**: Implemented Feature 1 (mutex lock on the ready queue).
 
 **Details**:
+- Added `import java.util.concurrent.locks.ReentrantLock;`
+- Added `private final ReentrantLock queueLock` in ReadyQueue
+- Protected `add()`, `poll()`, `processOf()` and `snapshot()` with `lock()` / `try` / `finally { unlock() }`
+- After the fix, no more exceptions and no lost or duplicated process; all 14 processes finished
 
-**Challenges**:
+**Challenges**: Compile errors from duplicated lines in `add()`, and `finally` placed before `try` in `poll()`.
 
-**Solution**:
+**Solution**: Fixed the order to `lock()`, `try`, `finally`, and removed the duplicated lines.
 
-**Time spent**:
+**Time spent**: 2 hours
 
 ---
 
-### Entry 4 - [Date and Time]
-**What I did**:
+### Entry 3 - [November 13, 2026, 1:00 PM - 1:15 PM]
+**What I did**: Implemented Feature 2 (locks on the shared statistics).
 
 **Details**:
+- Added three locks: `ctxLock`, `completedLock`, `serviceLock` (one lock per variable, because the counters are independent)
+- Protected `incrementContextSwitch()`, `incrementCompletedProcess()`, `addServiceTime()` and the three getters
+- Result: Context switches 29, Completed processes 14, Total service time 67759, all ✔
 
-**Challenges**:
+**Challenges**: `ClassNotFoundException` because the closing braces of `SharedStats` and `ReadyQueue` were missing, so the code did not compile.
 
-**Solution**:
+**Solution**: Checked the braces and added the missing ones.
 
-**Time spent**:
+**Time spent**: 1 hour
+
 
 ---
 
-### Entry 5 - [Date and Time]
-**What I did**:
+### Entry 4 -[November 13, 2026, 1:30 PM - 3:00 PM]
+**What I did**: Implemented Feature 3 (counting semaphore instead of busy waiting).
 
 **Details**:
+- Added `Semaphore readyCount = new Semaphore(0)` in ReadyQueue (starts at 0 because the queue is empty)
+- Added `readyCount.release()` in `add()`
+- Added `waitForProcess()` (acquire) and `wakeAll(int n)` (release(n)) in ReadyQueue
+- Rewrote `CpuWorker.run()`: wait on the semaphore, poll, run one quantum, re-add if not finished, and call `wakeAll(totalCPUs)` when the last process completes
+- Result: all four verification lines ✔ and `Busy-waiting polls = 0`
 
-**Challenges**:
+**Challenges**: The old polling code was still in `run()`, and the closing brace of `CpuWorker` was missing.
 
-**Solution**:
+**Solution**: Replaced the whole `run()` method and added the missing brace.
 
-**Time spent**:
+**Time spent**: 1.5 hours
 
+---
+
+### Entry 5 - [November 13, 2026, 3:00 PM]
+**What I did**: Ran the program several times to verify the solution, then started the documentation.
+
+**Details**:
+- Ran the program multiple times: all four lines ✔ and no WATCHDOG
+- Filled in the student information in MY_WORK.md
+- Started the reflection and technical answers
+
+**Challenges**: Making sure my answers use my own output (the starter crashed before printing numbers).
+
+**Solution**: Used the NullPointerException and the observed = 0 verification block for Question 1.
+
+**Time spent**: 1 hour
 ---
 
 ### Entry 6 - [Optional - Date and Time]
@@ -214,19 +233,19 @@
 
 > 💡 **TIP:** Fill this in **last**, after all entries are written.
 
-**Total time spent on assignment**: [X hours]
+**Total time spent on assignment**: [6 hours]
 
-**Most challenging part**:
+**Most challenging part*fixing the compile errors caused by missing closing braces*:
 
-**Most interesting learning**:
+**Most interesting learning*a race condition can destroy the result even in a very small piece of code*:
 
-**What I would do differently next time**:
+**What I would do differently next time*commit after every small step, and check the braces before running*:
 
 ---
 
 # Part B: Reflection (0.5 mark)
 
-> 🛑 **STOP:** Do **not** start this part until you have read the `README.md`, read the **entire** `SchedulerSimulationSync.java`, run it, and finished the three features.
+> 🛑 *STOP:** Do **not** start this part until you have read the `README.md`, read the **entire** `SchedulerSimulationSync.java`, run it, and finished the three features.
 >
 > ⚠️ **WARNING:** Each answer must be **5 to 7 sentences**, in **your own words**. Copied or AI-generated answers without understanding get **0 marks for the whole assignment**. You may be asked to explain them in person.
 >
@@ -240,7 +259,13 @@
 
 **Your Answer:** *(5-7 sentences)*
 
-[Write your answer here.]
+[I learned that count++ is not a single atomic operation; it actually consists of three separate steps (read, add, and write), which means two concurrent threads can overwrite each other and cause a lost update.
+
+I realized that a critical section requires mutual exclusion to prevent race conditions, so I implemented a ReentrantLock using the lock() / try / finally { unlock() } pattern to guarantee the lock is always released.
+
+I understood how a semaphore tracks available resources and processes, allowing CPUs to block cleanly instead of wasting cycles in busy waiting.
+
+What surprised me the most was that the starter code crashed immediately with a NullPointerException inside snapshot() even before running a single process.]
 
 ## Question 2: What was the most challenging part of this assignment?
 
@@ -248,7 +273,9 @@
 
 **Your Answer:** *(5-7 sentences)*
 
-[Write your answer here.]
+[The most challenging part was dealing with the initial compile errors—specifically duplicated lines in add(), a finally block placed before try, missing braces—along with the ClassNotFoundException.
+
+It was difficult because multiple syntax and structural errors were tangled together in unfamiliar starter code, making it tricky to isolate the root cause of each issue before I could even begin testing the actual concurrency logic.]
 
 ## Question 3: How did you overcome the challenges you faced?
 
@@ -256,7 +283,11 @@
 
 **Your Answer:** *(5-7 sentences)*
 
-[Write your answer here.]
+[I overcame these hurdles by carefully reading the compiler error messages and relying on the IDE's Problems panel to locate every issue.
+
+I focused on fixing one problem at a time and ran the program repeatedly to verify each incremental change.
+
+When I got stuck, I asked an AI assistant for help, making sure to read through and understand every single line of code rather than just copying the fix.]
 
 ## Question 4: Where can synchronization concepts be applied in real-world applications?
 
@@ -264,7 +295,11 @@
 
 **Your Answer:** *(5-7 sentences)*
 
-[Write your answer here.]
+[Bank transfer: An account balance is shared data that multiple transactions might access at once, so a lock is needed to protect it—just like how ctxLock protects shared state in my code.
+
+Ticket/seat booking: Two users must never be allowed to claim the same seat simultaneously, which mirrors how poll() safely retrieves and removes an item so only one thread gets it.
+
+Print queue: Printers sit idle and wait until print jobs arrive in the queue, which works just like a semaphore initialized with a value of 0 that blocks threads until a resource becomes available.]
 
 ### Optional: What would you like to learn more about?
 
@@ -298,20 +333,40 @@
 
 **Your Answer:** *(3-5 sentences)*
 
-[Write your answer here.]
+[In the original starter, all four CPUs crashed with a NullPointerException in ReadyQueue.snapshot(), so no process ran and the verification block showed observed = 0 for the three counters (expected 29, 14 and 67759). After I fixed only the ready queue (Feature 1), the counters still had lost updates: context switches were 25 instead of 29, and total service time was 61759 instead of 67759. A lost update happens because contextSwitchCount++ is three steps: read, RaceWindow.pause(), write. The same bug can happen on a real machine without RaceWindow because count++ is not one atomic instruction, and a thread can be preempted or run on another core between the read and the write. It is hard to detect because it happens rarely and randomly, and the program often looks correct.]
 
 Verification block of the **original starter**:
 ```
-[Paste the verification block (or the exception/watchdog message) of the starter here]
+[
+Exception in thread "CPU-3" Exception in thread "CPU-4" Exception in thread "CPU-2" Exception in thread "CPU-1" java.lang.NullPointerException: Cannot read field "next" because "this.next" is null
+        at java.base/java.util.LinkedList$ListItr.next(Unknown Source)
+        at ReadyQueue.snapshot(SchedulerSimulationSync.java:151)
+        at CpuWorker.run(SchedulerSimulationSync.java:280)
+
+  Context switches (quanta executed)     expected 29       observed 0        ✘ MISMATCH
+  Completed processes                    expected 14       observed 0        ✘ MISMATCH
+  Total service time (ms)                expected 67759    observed 0        ✘ MISMATCH
+  Busy-waiting polls (must be 0)         expected 0        observed 0        ✔]
 ```
 
 Verification block of **my final version**:
 ```
-[Paste the verification block of your final version here (all lines ✔)]
+[
+  Context switches (quanta executed)     expected 29       observed 29       ✔
+  Completed processes                    expected 14       observed 14       ✔
+  Total service time (ms)                expected 67759    observed 67759    ✔
+  Busy-waiting polls (must be 0)         expected 0        observed 0        ✔
+  ✔ All shared values are consistent.
+]
 ```
 
 **Explanation of the timeline:**
-[Explain the lost update step by step.]
+[1. CPU-1 reads contextSwitchCount = 12 into tmp.
+2. RaceWindow.pause() simulates a preemption, so CPU-1 waits.
+3. CPU-2 also reads contextSwitchCount = 12 (it is still 12).
+4. CPU-1 writes 13.
+5. CPU-2 writes 13 (it overwrites CPU-1's result).
+Two increments happened but the counter only increased by one, so one update is lost.]
 
 ## Question 2: Critical Sections and Lock Granularity
 
@@ -321,13 +376,14 @@ Verification block of **my final version**:
 
 **Your Answer:** *(3-5 sentences)*
 
-[Write your answer here.]
+[I protected the ready queue methods (add, poll, processOf, snapshot) with queueLock, and each counter and its getter with its own lock: ctxLock, completedLock and serviceLock. I used one lock per variable because the counters are independent, so updating contextSwitchCount does not need to block totalServiceTime; the trade-off is more code. The queue has a different lock because it protects different data (list and map), so statistics updates do not wait for queue operations. Mutual exclusion is guaranteed because only one thread can hold a ReentrantLock at a time. A default ReentrantLock is not fair, so bounded waiting is not strictly guaranteed, but our critical sections are very short.]
 
 | Critical section (variable / method) | Lock used | Why it needs protection |
 |---|---|---|
-| [e.g., `ReadyQueue.poll()`] | [lock name] | [reason] |
-| [...] | [...] | [...] |
-
+| `ReadyQueue.add()`, `poll()`, `processOf()`, `snapshot()` | `queueLock` | `list` and `map` are shared by all CPUs |
+| `contextSwitchCount` (`incrementContextSwitch()`, `getContextSwitchCount()`) | `ctxLock` | read-modify-write can lose updates |
+| `completedProcessCount` (`incrementCompletedProcess()`, `getCompletedProcessCount()`) | `completedLock` | read-modify-write can lose updates |
+| `totalServiceTime` (`addServiceTime()`, `getTotalServiceTime()`) | `serviceLock` | read-modify-write can lose updates |
 ## Question 3: Busy Waiting vs Semaphore
 
 **Question**: Describe the **busy waiting** of the starter and its cost (give the `Busy-waiting polls` number from your **starter** run). What does the **value of your semaphore** represent? What is its **initial value** and why? What is its value right after the `numProcesses` initial `add()` calls? Why does the last CPU call `release(totalCPUs)` at the end, and what would happen if it did not?
@@ -336,7 +392,7 @@ Verification block of **my final version**:
 
 **Your Answer:** *(3-5 sentences)*
 
-[Write your answer here.]
+[In the starter, an idle CPU called poll(), got null, slept 20 ms and tried again, which wastes CPU time (busy waiting). My starter crashed before this loop, so after Feature 1 only I saw Busy-waiting polls = 19 to 20. The value of my semaphore readyCount is the number of processes waiting in the ready queue; it starts at 0 because the queue is empty, and it becomes 14 after the 14 initial add() calls. When the last process completes, the CPU calls release(totalCPUs) to wake the blocked CPUs so they see that everything is finished and stop. Without it, they would stay blocked in acquire() forever and the watchdog would stop the program.
 
 ## Question 4: Classical Problems and Deadlock
 
@@ -345,26 +401,27 @@ Verification block of **my final version**:
 > 💡 **TIP:** Recall the bounded-buffer solution of the slides (`empty`, `full`, `mutex`) and the order of `wait()` calls in the producer and the consumer. For the deadlock, think about a producer that holds the mutex while waiting for a free slot that only a consumer (who needs the mutex) can create.
 
 **Your Answer:** *(3-5 sentences)*
-
+    This is the Producer-Consumer problem (Bounded Buffer). The CPUs are consumers when they take a process with poll(), and they are also producers when they re-add an unfinished process with add(); main is a producer for the initial processes. For a bounded queue of capacity K, I would need three semaphores: empty = K, full = 0 and mutex = 1. A deadlock happens if a producer does wait(mutex) before wait(empty): when the queue is full, it holds the mutex while waiting for a free slot, but a consumer needs the mutex to remove an item, so both wait forever. I would prevent it by breaking the hold-and-wait condition: always call wait(empty) before wait(mutex).
 **Classical problem and roles**:
 [Name the problem; who is the producer, who is the consumer?]
-
+    Producer-Consumer (Bounded Buffer). Producers: main (initial add) and CPUs (re-add unfinished processes). Consumers: CPUs (poll).
 **Semaphores for a bounded queue (name and initial value)**:
 [Name the three semaphores and their initial values.]
-
+    empty = K (free slots), full = 0 (items in the queue), mutex = 1 (protects the queue).
 **Deadlock scenario and prevention**:
 [Describe the scenario and the necessary condition you would break.]
 
 ## Summary
 
 **Key concepts I understood through these questions:**
-1.
-2.
-3.
+1.A race condition loses updates because count++ is read-modify-write.
+2.A ReentrantLock with try/finally gives mutual exclusion.
+3. A counting semaphore lets threads block instead of busy waiting.
+
 
 **Concepts I need to study more:**
-1.
-2.
+1. Deadlock prevention in more complex cases.
+2. Fair locks and bounded waiting.
 
 ---
 
